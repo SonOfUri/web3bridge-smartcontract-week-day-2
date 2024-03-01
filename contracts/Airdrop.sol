@@ -3,7 +3,34 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+    interface IVRFv2Consumer {
+        function requestRandomWords() external returns (uint256 requestId);
+        function setNum(uint32 _num) external ;
+        function Winners() external view returns(uint [] memory _winners);   
+    
+    }
+
 contract PrizeDistributionSystem {
+
+    // Random Logic Functions
+    //function uses interface to get random number from chainlink
+    function randomWinners() external  returns(uint [] memory){
+        uint[] memory arr = IVRFv2Consumer(chainLink).Winners();
+        for(uint i = 0; i < arr.length; i++){
+           uint a = arr[i];
+           uint b = a % 10;
+            winnigNumber.push(b);
+            }
+        //winning number is an array that will hold all the random numbers returned
+        return (winnigNumber);
+     }
+
+    function generateRandomNumbers(uint32 _numword) external {
+        // user specifies how many random numbers he want and calls the function to generate the numbers from the chainlink contract
+        IVRFv2Consumer(chainLink).setNum(_numword);
+        IVRFv2Consumer(chainLink).requestRandomWords();
+    }
+
     IERC20 public rewardToken;
     address public owner;
     uint256 public nextParticipantId = 1; // Start participant IDs at 1

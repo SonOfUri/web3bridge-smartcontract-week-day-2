@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
 // An example of a consumer contract that relies on a subscription for funding.
-// 0x5FbDB2315678afecb367f032d93F642f64180aa3
 pragma solidity ^0.8.7;
 
 import {VRFCoordinatorV2Interface} from "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
@@ -18,14 +17,10 @@ import {ConfirmedOwner} from "@chainlink/contracts/src/v0.8/shared/access/Confir
  * DO NOT USE THIS CODE IN PRODUCTION.
  */
 
-contract AjiVRFv2Consumer is VRFConsumerBaseV2, ConfirmedOwner {
+contract VRFv2Consumer is VRFConsumerBaseV2, ConfirmedOwner {
     event RequestSent(uint256 requestId, uint32 numWords);
     event RequestFulfilled(uint256 requestId, uint256[] randomWords);
 
-    uint public randomNumber1;
-    uint public randomNumber2;
-    uint public randomNumber3;
-    uint [] winners;
     struct RequestStatus {
         bool fulfilled; // whether the request has been successfully fulfilled
         bool exists; // whether a requestId exists
@@ -37,6 +32,8 @@ contract AjiVRFv2Consumer is VRFConsumerBaseV2, ConfirmedOwner {
 
     // Your subscription ID.
     uint64 s_subscriptionId;
+
+    uint [] winners;
 
     // past requests Id.
     uint256[] public requestIds;
@@ -54,14 +51,14 @@ contract AjiVRFv2Consumer is VRFConsumerBaseV2, ConfirmedOwner {
     // this limit based on the network that you select, the size of the request,
     // and the processing of the callback request in the fulfillRandomWords()
     // function.
-    uint32 callbackGasLimit = 100000;
+    uint32 callbackGasLimit = 300000;
 
     // The default is 3, but you can set this higher.
-    uint16 requestConfirmations = 10;
+    uint16 requestConfirmations = 3;
 
     // For this example, retrieve 2 random values in one request.
     // Cannot exceed VRFCoordinatorV2.MAX_NUM_WORDS.
-    uint32 public numWords;
+    uint32 numWords;
 
     /**
      * HARDCODED FOR SEPOLIA
@@ -116,26 +113,20 @@ contract AjiVRFv2Consumer is VRFConsumerBaseV2, ConfirmedOwner {
 
     function getRequestStatus(
         uint256 _requestId
-    ) external  returns (bool fulfilled, uint256 [] memory) {
+    ) external  returns (bool fulfilled, uint256[] memory randomWords) {
         require(s_requests[_requestId].exists, "request not found");
         RequestStatus memory request = s_requests[_requestId];
-    // EDITED THE RETURN VALUE TO BE ABLE TO GET ACCESS TO THREE RANDOM NUMBERS
-
-        for(uint i = 0; i <  request.randomWords.length; i++){
-           i = i % 10;
-            winners.push(i);
-            }
-    
-        
-        return (request.fulfilled, winners);
-    }
-    
-    function getWinners() external view  returns(uint[] memory){
-        return winners;
+        winners = request.randomWords;
+        return (request.fulfilled, request.randomWords);
     }
 
-    function specifyNumberOfWinners(uint32  _num) external {
+
+    //Allows user configure the number of random numbers
+    function setNum(uint32 _num) external {
         numWords = _num;
     }
-   
+    //Returns an array of the random numbers
+    function Winners() external view returns(uint [] memory _winners){
+        return winners;
+    }
 }
